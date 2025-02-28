@@ -9,6 +9,7 @@ const INTERVAL_TIME = 1000;
 const StopwatchContainer = () => {
     const [stopwatches, setStopwatches] = useState<IStopwatch[]>([]);
     const intervalRefs = useRef<{ [key: string]: number | null }>({});
+    const numberOfItems = Object.keys(intervalRefs.current).length;
 
     const findAndUpdateStopwatch = (id: IStopwatch['id'], props: Partial<IStopwatch>, step: IStopwatch['seconds'] = 0) => {
         setStopwatches(prev => prev.map(sw =>
@@ -65,13 +66,14 @@ const StopwatchContainer = () => {
     }
 
     useEffect(() => {
+        const intervals = intervalRefs.current;
         return () => {
             // cleanup
-            Object.values(intervalRefs.current).forEach(interval => {
+            Object.values(intervals).forEach(interval => {
                 if (interval) clearInterval(interval);
             });
         };
-    }, []);
+    }, [numberOfItems]);
 
     return (
         <div>
