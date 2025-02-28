@@ -1,26 +1,39 @@
-import { IStopwatch } from "../types"
+import { FC } from "react";
+import { IStopwatch } from "../types";
+import Controls from "./Controls";
+import Display from "./Display";
 
-const Stopwatch = ({ stopwatch, handleStartStopwatch, handlePauseStopwatch, handleClearStopwatch }: {
+export interface IStopwatchProps {
     stopwatch: IStopwatch;
-    handleStartStopwatch: () => void;
-    handlePauseStopwatch: () => void;
-    handleClearStopwatch: () => void;
+    startTimer: () => void;
+    pauseTimer: () => void;
+    setTimer: (seconds: number) => void;
+    deleteTimer: () => void;
+}
+
+const Stopwatch: FC<IStopwatchProps> = ({
+    stopwatch,
+    startTimer,
+    pauseTimer,
+    setTimer,
+    deleteTimer
 }) => {
+    const seconds = stopwatch?.seconds;
+    const isActive = stopwatch?.isActive;
+
     return (
         <div className="stopwatch-card">
-            <h2>{stopwatch.seconds}</h2>
-            <div className="stopwatch-buttons">
-                {
-                    stopwatch.seconds === 0 ? (
-                        <button onClick={handleStartStopwatch}>Start</button>
-                    ) : (
-                        <>
-                            <button onClick={handlePauseStopwatch}>Pause</button>
-                            <button onClick={handleClearStopwatch}>Clear</button>
-                        </>
-                    )
-                }
-            </div>
+            <Display seconds={seconds} />
+            <Controls
+                {...{
+                    seconds,
+                    isActive,
+                    setTimer,
+                    startTimer,
+                    pauseTimer,
+                    deleteTimer
+                }}
+            />
         </div>
     )
 }

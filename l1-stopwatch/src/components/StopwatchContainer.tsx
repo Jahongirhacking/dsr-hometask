@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { PlusOutlined } from "@ant-design/icons";
+import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import Stopwatch from "./Stopwatch";
 import { IStopwatch } from "../types";
+import Stopwatch from "./Stopwatch";
 
 const INTERVAL_TIME = 1000;
 
@@ -9,44 +10,63 @@ const StopwatchContainer = () => {
     const [stopwatches, setStopwatches] = useState<IStopwatch[]>([]);
     const intervalRefs = useRef<{ [key: string]: number | null }>({});
 
-    const handleAddStopwatch = () => {
+    const findAndUpdateStopwatch = (id: IStopwatch['id'], props: Partial<IStopwatch>, step: IStopwatch['seconds'] = 0) => {
+        setStopwatches(prev => prev.map(sw =>
+            sw.id === id ? (
+                {
+                    ...sw,
+                    ...props,
+                    ...(step != 0 ? { seconds: sw.seconds + step } : {})
+                }
+            ) : sw
+        ));
+    }
+
+    const addTimer = () => {
         const id = uuidv4();
-        setStopwatches(prev => [...prev, { id, intervalId: null, seconds: 0 }]);
+        setStopwatches(prev => [...prev, {
+            id,
+            seconds: 0,
+            isActive: false
+        }]);
         intervalRefs.current[id] = null;
     };
 
-    const handleStartStopwatch = (id: IStopwatch['id']) => {
-        if (intervalRefs.current[id]) return; // Prevent multiple intervals
-
+    const startTimer = (id: IStopwatch['id']) => {
+        if (intervalRefs.current[id]) return;
+        // increment seconds
         const intervalId = setInterval(() => {
-            setStopwatches(prev =>
-                prev.map(sw =>
-                    sw.id === id ? { ...sw, seconds: sw.seconds + 1 } : sw
-                )
-            );
+            findAndUpdateStopwatch(id, {}, 1);
         }, INTERVAL_TIME);
-
+        // make active
+        findAndUpdateStopwatch(id, { isActive: true });
         intervalRefs.current[id] = intervalId;
     };
 
-    const handlePauseStopwatch = (id: IStopwatch['id']) => {
+    const pauseTimer = (id: IStopwatch['id']) => {
         if (intervalRefs.current[id]) {
+            // clear interval
             clearInterval(intervalRefs.current[id]!);
             intervalRefs.current[id] = null;
+            // make inactive
+            findAndUpdateStopwatch(id, { isActive: false });
         }
     };
 
-    const handleClearStopwatch = (id: IStopwatch['id']) => {
-        handlePauseStopwatch(id);
-        setStopwatches(prev =>
-            prev.map(sw =>
-                sw.id === id ? { ...sw, seconds: 0 } : sw
-            )
-        );
+    const setTimer = (id: IStopwatch['id'], seconds: number) => {
+        pauseTimer(id);
+        findAndUpdateStopwatch(id, { seconds });
     };
+
+    const deleteTimer = (id: IStopwatch['id']) => {
+        pauseTimer(id);
+        delete intervalRefs.current[id];
+        setStopwatches(prev => prev.filter(sw => sw.id !== id));
+    }
 
     useEffect(() => {
         return () => {
+            // cleanup
             Object.values(intervalRefs.current).forEach(interval => {
                 if (interval) clearInterval(interval);
             });
@@ -59,12 +79,13 @@ const StopwatchContainer = () => {
                 <Stopwatch
                     key={stopwatch.id}
                     stopwatch={stopwatch}
-                    handleStartStopwatch={() => handleStartStopwatch(stopwatch.id)}
-                    handlePauseStopwatch={() => handlePauseStopwatch(stopwatch.id)}
-                    handleClearStopwatch={() => handleClearStopwatch(stopwatch.id)}
+                    startTimer={() => startTimer(stopwatch?.id)}
+                    pauseTimer={() => pauseTimer(stopwatch?.id)}
+                    setTimer={(seconds: number) => setTimer(stopwatch?.id, seconds)}
+                    deleteTimer={() => deleteTimer(stopwatch?.id)}
                 />
             ))}
-            <button onClick={handleAddStopwatch}>Add Stopwatch</button>
+            <button onClick={addTimer}><PlusOutlined /></button>
         </div>
     );
 };
