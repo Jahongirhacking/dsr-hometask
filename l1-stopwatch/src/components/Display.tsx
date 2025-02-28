@@ -12,7 +12,7 @@ const Display: FC<IDisplayProps> = ({ seconds }) => {
             arr.unshift(temp % 60);
             temp = Math.floor(temp / 60);
         }
-        return arr.map(el => el <= 9 ? `0${el}` : el).join(':');
+        return arr.map((el, index) => el <= 9 && index !== 0 ? `0${el}` : el).join(':');
     }
 
     return (

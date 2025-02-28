@@ -9,7 +9,6 @@ const INTERVAL_TIME = 1000;
 const StopwatchContainer = () => {
     const [stopwatches, setStopwatches] = useState<IStopwatch[]>([]);
     const intervalRefs = useRef<{ [key: string]: number | null }>({});
-    const numberOfItems = Object.keys(intervalRefs.current).length;
 
     const findAndUpdateStopwatch = (id: IStopwatch['id'], props: Partial<IStopwatch>, step: IStopwatch['seconds'] = 0) => {
         setStopwatches(prev => prev.map(sw =>
@@ -73,10 +72,11 @@ const StopwatchContainer = () => {
                 if (interval) clearInterval(interval);
             });
         };
-    }, [numberOfItems]);
+    }, []);
 
     return (
-        <div>
+        <div className="stopwatch-container">
+            {!stopwatches.length && <p>You have no stopwatches. Please press the plus button to add a stopwatch!</p>}
             {stopwatches.map(stopwatch => (
                 <Stopwatch
                     key={stopwatch.id}
@@ -87,7 +87,7 @@ const StopwatchContainer = () => {
                     deleteTimer={() => deleteTimer(stopwatch?.id)}
                 />
             ))}
-            <button onClick={addTimer}><PlusOutlined /></button>
+            <button className="add-btn" onClick={addTimer} title="Add stopwatch"><PlusOutlined /></button>
         </div>
     );
 };
