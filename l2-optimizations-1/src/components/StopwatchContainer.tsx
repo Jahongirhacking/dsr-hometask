@@ -1,0 +1,95 @@
+import { PlusOutlined } from "@ant-design/icons";
+import { useEffect, useRef, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { IStopwatch } from "../types";
+import Stopwatch from "./Stopwatch";
+
+const INTERVAL_TIME = 1000;
+
+const StopwatchContainer = () => {
+    const [stopwatches, setStopwatches] = useState<IStopwatch[]>([]);
+    const intervalRefs = useRef<{ [key: string]: number | null }>({});
+    const numberOfItems = Object.keys(intervalRefs.current).length;
+
+    const findAndUpdateStopwatch = (id: IStopwatch['id'], props: Partial<IStopwatch>, step: IStopwatch['seconds'] = 0) => {
+        setStopwatches(prev => prev.map(sw =>
+            sw.id === id ? (
+                {
+                    ...sw,
+                    ...props,
+                    ...(step != 0 ? { seconds: sw.seconds + step } : {})
+                }
+            ) : sw
+        ));
+    }
+
+    const addTimer = () => {
+        const id = uuidv4();
+        setStopwatches(prev => [...prev, {
+            id,
+            seconds: 0,
+            isActive: false
+        }]);
+        intervalRefs.current[id] = null;
+    };
+
+    const startTimer = (id: IStopwatch['id']) => {
+        if (intervalRefs.current[id]) return;
+        // increment seconds
+        const intervalId = setInterval(() => {
+            findAndUpdateStopwatch(id, {}, 1);
+        }, INTERVAL_TIME);
+        // make active
+        findAndUpdateStopwatch(id, { isActive: true });
+        intervalRefs.current[id] = intervalId;
+    };
+
+    const pauseTimer = (id: IStopwatch['id']) => {
+        if (intervalRefs.current[id]) {
+            // clear interval
+            clearInterval(intervalRefs.current[id]!);
+            intervalRefs.current[id] = null;
+            // make inactive
+            findAndUpdateStopwatch(id, { isActive: false });
+        }
+    };
+
+    const setTimer = (id: IStopwatch['id'], seconds: number) => {
+        pauseTimer(id);
+        findAndUpdateStopwatch(id, { seconds });
+    };
+
+    const deleteTimer = (id: IStopwatch['id']) => {
+        pauseTimer(id);
+        delete intervalRefs.current[id];
+        setStopwatches(prev => prev.filter(sw => sw.id !== id));
+    }
+
+    useEffect(() => {
+        const intervals = intervalRefs.current;
+        return () => {
+            // cleanup
+            Object.values(intervals).forEach(interval => {
+                if (interval) clearInterval(interval);
+            });
+        };
+    }, [numberOfItems]);
+
+    return (
+        <div>
+            {stopwatches.map(stopwatch => (
+                <Stopwatch
+                    key={stopwatch.id}
+                    stopwatch={stopwatch}
+                    startTimer={() => startTimer(stopwatch?.id)}
+                    pauseTimer={() => pauseTimer(stopwatch?.id)}
+                    setTimer={(seconds: number) => setTimer(stopwatch?.id, seconds)}
+                    deleteTimer={() => deleteTimer(stopwatch?.id)}
+                />
+            ))}
+            <button onClick={addTimer}><PlusOutlined /></button>
+        </div>
+    );
+};
+
+export default StopwatchContainer;
