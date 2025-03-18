@@ -14,23 +14,23 @@ const Controls: FC<IControlsProps> = ({ seconds, isActive, startTimer, setTimer,
             <div>
                 {
                     seconds === 0 && !isActive ? (
-                        <button onClick={startTimer}><CaretRightOutlined /></button>
+                        <button onClick={startTimer} title="Start"><CaretRightOutlined /></button>
                     ) : (
                         <>
                             {
                                 isActive ? (
-                                    <button onClick={pauseTimer}><PauseOutlined /></button>
+                                    <button onClick={pauseTimer} title="Pause"><PauseOutlined /></button>
                                 ) : (
-                                    <button onClick={startTimer}><CaretRightOutlined /></button>
+                                    <button onClick={startTimer} title="Resume"><CaretRightOutlined /></button>
                                 )
                             }
 
-                            <button onClick={() => setTimer(0)}><ReloadOutlined /></button>
+                            <button onClick={() => setTimer(0)} title="Clear"><ReloadOutlined /></button>
                         </>
                     )
                 }
             </div>
-            <button onClick={deleteTimer}><DeleteOutlined /></button>
+            <button onClick={deleteTimer} title="Delete" className="delete-btn"><DeleteOutlined /></button>
         </div >
     )
 }
