@@ -20,9 +20,12 @@ const Stopwatch: FC<IStopwatchProps> = ({
 }) => {
     const seconds = stopwatch?.seconds;
     const isActive = stopwatch?.isActive;
+    const minutes = Math.floor(seconds / 60);
 
     return (
-        <div className="stopwatch-card">
+        <div className={`stopwatch-card 
+            ${!seconds && !isActive ? 'initial' : isActive ? 'active' : 'paused'}`
+        }>
             <Display seconds={seconds} />
             <Controls
                 {...{
@@ -34,6 +37,9 @@ const Stopwatch: FC<IStopwatchProps> = ({
                     deleteTimer
                 }}
             />
+            <div className="overlay" style={{
+                height: `${((60 + (minutes % 2 ? -1 : 1) * (seconds % 60)) % 60 || (minutes % 2 ? 60 : 0)) / 60 * 100}%`
+            }} />
         </div>
     )
 }
