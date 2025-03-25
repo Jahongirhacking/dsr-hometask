@@ -1,4 +1,4 @@
-import { FC } from "react";
+import React, { FC } from "react";
 import { IStopwatch } from "../types";
 import Controls from "./Controls";
 import Display from "./Display";
@@ -11,7 +11,7 @@ export interface IStopwatchProps {
     deleteTimer: () => void;
 }
 
-const Stopwatch: FC<IStopwatchProps> = ({
+const Stopwatch: FC<IStopwatchProps> = React.memo(({
     stopwatch,
     startTimer,
     pauseTimer,
@@ -42,6 +42,6 @@ const Stopwatch: FC<IStopwatchProps> = ({
             }} />
         </div>
     )
-}
+})
 
 export default Stopwatch

@@ -1,5 +1,5 @@
 import { PlusOutlined } from "@ant-design/icons";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { IStopwatch } from "../types";
 import Stopwatch from "./Stopwatch";
@@ -10,19 +10,21 @@ const StopwatchContainer = () => {
     const [stopwatches, setStopwatches] = useState<IStopwatch[]>([]);
     const intervalRefs = useRef<{ [key: string]: number | null }>({});
 
-    const findAndUpdateStopwatch = (id: IStopwatch['id'], props: Partial<IStopwatch>, step: IStopwatch['seconds'] = 0) => {
-        setStopwatches(prev => prev.map(sw =>
-            sw.id === id ? (
-                {
-                    ...sw,
-                    ...props,
-                    ...(step != 0 ? { seconds: sw.seconds + step } : {})
-                }
-            ) : sw
-        ));
-    }
+    const findAndUpdateStopwatch = useCallback((id: IStopwatch['id'], props: Partial<IStopwatch>, step: IStopwatch['seconds'] = 0) => {
+        setStopwatches(prev => prev.map(sw => {
+            if (sw.id !== id) return sw;
+            const newStopwatch = {
+                ...sw,
+                ...props,
+                ...(step != 0 ? { seconds: sw.seconds + step } : {})
+            };
+            return (
+                JSON.stringify(sw) === JSON.stringify(newStopwatch) ? sw : newStopwatch
+            )
+        }));
+    }, []);
 
-    const addTimer = () => {
+    const addTimer = useCallback(() => {
         const id = uuidv4();
         setStopwatches(prev => [...prev, {
             id,
@@ -30,9 +32,9 @@ const StopwatchContainer = () => {
             isActive: false
         }]);
         intervalRefs.current[id] = null;
-    };
+    }, []);
 
-    const startTimer = (id: IStopwatch['id']) => {
+    const startTimer = useCallback((id: IStopwatch['id']) => () => {
         if (intervalRefs.current[id]) return;
         // increment seconds
         const intervalId = setInterval(() => {
@@ -41,9 +43,9 @@ const StopwatchContainer = () => {
         // make active
         findAndUpdateStopwatch(id, { isActive: true });
         intervalRefs.current[id] = intervalId;
-    };
+    }, [findAndUpdateStopwatch]);
 
-    const pauseTimer = (id: IStopwatch['id']) => {
+    const pauseTimer = useCallback((id: IStopwatch['id']) => () => {
         if (intervalRefs.current[id]) {
             // clear interval
             clearInterval(intervalRefs.current[id]!);
@@ -51,18 +53,18 @@ const StopwatchContainer = () => {
             // make inactive
             findAndUpdateStopwatch(id, { isActive: false });
         }
-    };
+    }, [findAndUpdateStopwatch]);
 
-    const setTimer = (id: IStopwatch['id'], seconds: number) => {
-        pauseTimer(id);
+    const setTimer = useCallback((id: IStopwatch['id']) => (seconds: number) => {
+        pauseTimer(id)();
         findAndUpdateStopwatch(id, { seconds });
-    };
+    }, [findAndUpdateStopwatch, pauseTimer]);
 
-    const deleteTimer = (id: IStopwatch['id']) => {
+    const deleteTimer = useCallback((id: IStopwatch['id']) => () => {
         pauseTimer(id);
         delete intervalRefs.current[id];
         setStopwatches(prev => prev.filter(sw => sw.id !== id));
-    }
+    }, [pauseTimer])
 
     useEffect(() => {
         const intervals = intervalRefs.current;
@@ -81,10 +83,10 @@ const StopwatchContainer = () => {
                 <Stopwatch
                     key={stopwatch.id}
                     stopwatch={stopwatch}
-                    startTimer={() => startTimer(stopwatch?.id)}
-                    pauseTimer={() => pauseTimer(stopwatch?.id)}
-                    setTimer={(seconds: number) => setTimer(stopwatch?.id, seconds)}
-                    deleteTimer={() => deleteTimer(stopwatch?.id)}
+                    startTimer={startTimer(stopwatch.id)}
+                    pauseTimer={pauseTimer(stopwatch.id)}
+                    setTimer={setTimer(stopwatch.id)}
+                    deleteTimer={deleteTimer(stopwatch.id)}
                 />
             ))}
             <button className="add-btn" onClick={addTimer} title="Add stopwatch"><PlusOutlined /></button>
