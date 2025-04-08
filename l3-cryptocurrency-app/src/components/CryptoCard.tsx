@@ -1,4 +1,4 @@
-import { ArrowDownOutlined, ArrowUpOutlined, DeleteFilled, MinusOutlined, ReloadOutlined } from "@ant-design/icons";
+import { DeleteFilled, FallOutlined, MinusOutlined, ReloadOutlined, RiseOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { CoinsContext } from "../CoinsContext";
@@ -48,9 +48,9 @@ const CryptoCard = memo(forwardRef(({ coin }: { coin: string }, ref) => {
                     <span className="indicator">
                         {
                             price.status === PriceStatus.Bullish
-                                ? <ArrowUpOutlined style={{ color: 'green' }} />
+                                ? <RiseOutlined style={{ color: 'green' }} />
                                 : price.status === PriceStatus.Bearish
-                                    ? <ArrowDownOutlined style={{ color: 'red' }} />
+                                    ? <FallOutlined style={{ color: 'red' }} />
                                     : <MinusOutlined style={{ color: 'blue' }} />
                         }
                     </span>
