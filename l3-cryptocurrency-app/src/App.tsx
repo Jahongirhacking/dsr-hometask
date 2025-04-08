@@ -4,6 +4,7 @@ import { CoinsContext } from "./CoinsContext";
 import Controls from "./components/Controls";
 import CryptoCard from "./components/CryptoCard";
 import Message, { ShowMessageProps } from "./components/Message";
+import useNetworkStatus from "./hooks/useNetworkStatus";
 import useTimer from "./hooks/useTimer";
 import { getBaseUrl } from "./utils/config";
 import { getLocalStorage, localStorageNames, setLocalStorage } from "./utils/storageUtils";
@@ -54,6 +55,7 @@ function App() {
   }, [])
 
   const { resetTimer } = useTimer(handleUpdateAllCoins);
+  const { isOnline, backToOnline } = useNetworkStatus();
 
   useEffect(() => {
     if (getLocalStorage(localStorageNames.firstVisit) === null) {
@@ -61,6 +63,17 @@ function App() {
     }
     setLocalStorage(localStorageNames.firstVisit, false);
   }, []);
+
+  useEffect(() => {
+    if (!isOnline && messageRef?.current) {
+      messageRef.current.showMessage({ message: "You are offline", status: 'error' });
+      return;
+    }
+    if (backToOnline) {
+      messageRef.current?.showMessage({ message: "You are online", status: 'success' });
+      return;
+    }
+  }, [isOnline, backToOnline])
 
   return (
     <CoinsContext.Provider
