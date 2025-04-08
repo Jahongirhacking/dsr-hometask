@@ -16,7 +16,7 @@ const INITIAL_COINS = ['doge'];
 const firstVisit = getLocalStorage(localStorageNames.firstVisit);
 
 function App() {
-  const [coins, setCoins] = useState<string[]>(firstVisit.current === null ? INITIAL_COINS : getLocalStorage(localStorageNames.coins));
+  const [coins, setCoins] = useState<string[]>(firstVisit === null ? INITIAL_COINS : getLocalStorage(localStorageNames.coins));
   const messageRef = useRef<{ showMessage: ({ message }: ShowMessageProps) => void }>();
   const childRefs = useRef<IChildProps>({});
 
