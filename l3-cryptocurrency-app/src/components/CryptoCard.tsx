@@ -1,12 +1,11 @@
 import { ArrowDownOutlined, ArrowUpOutlined, DeleteFilled, MinusOutlined, ReloadOutlined } from "@ant-design/icons";
 import axios from "axios";
-import { forwardRef, memo, useCallback, useContext, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
+import { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { CoinsContext } from "../CoinsContext";
 import { getBaseUrl } from "../utils/config";
-import { ShowMessageProps } from "./Message";
 import { IPrice, PriceStatus } from "./types";
 
-const CryptoCard = memo(forwardRef(({ coin, showMessage }: { coin: string, showMessage?: ({ message }: ShowMessageProps) => void }, ref) => {
+const CryptoCard = memo(forwardRef(({ coin }: { coin: string }, ref) => {
     const [price, setPrice] = useState<IPrice>({});
     const oldPrice = useRef<number>();
     const [error, setError] = useState<string | null>(null);
@@ -20,12 +19,6 @@ const CryptoCard = memo(forwardRef(({ coin, showMessage }: { coin: string, showM
         setError(null);
         try {
             const { data } = await axios.get(getBaseUrl(coin));
-            if (data?.Response === "Error") {
-                context!.handleDeleteCoin(coin);
-                if (showMessage) {
-                    showMessage({ message: `Couldn't find any coin with a name ${coin.toUpperCase()} in the list` });
-                }
-            }
             let status = PriceStatus.Neutral;
             if (oldPrice.current) {
                 if (oldPrice.current < data?.USD) status = PriceStatus.Bullish;
@@ -37,9 +30,9 @@ const CryptoCard = memo(forwardRef(({ coin, showMessage }: { coin: string, showM
             setError('Failed to fetch price');
             console.error('API Error:', err);
         }
-    }, [coin, context, showMessage]);
+    }, [coin]);
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         getPrice();
     }, [getPrice]);
 

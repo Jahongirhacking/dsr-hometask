@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import axios from "axios";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CoinsContext } from "./CoinsContext";
 import Controls from "./components/Controls";
 import CryptoCard from "./components/CryptoCard";
 import Message, { ShowMessageProps } from "./components/Message";
 import useTimer from "./hooks/useTimer";
+import { getBaseUrl } from "./utils/config";
 import { getLocalStorage, localStorageNames, setLocalStorage } from "./utils/storageUtils";
 
 interface IChildProps {
@@ -11,11 +13,10 @@ interface IChildProps {
 }
 
 const INITIAL_COINS = ['doge'];
+const firstVisit = getLocalStorage(localStorageNames.firstVisit);
 
 function App() {
-  const firstVisit = useRef(getLocalStorage(localStorageNames.firstVisit));
   const [coins, setCoins] = useState<string[]>(firstVisit.current === null ? INITIAL_COINS : getLocalStorage(localStorageNames.coins));
-  const [, startTransition] = useTransition();
   const messageRef = useRef<{ showMessage: ({ message }: ShowMessageProps) => void }>();
   const childRefs = useRef<IChildProps>({});
 
@@ -30,18 +31,23 @@ function App() {
   }, [handleUpdateCoin, coins]);
 
   const handleDeleteCoin = useCallback((coin: string) => {
-    startTransition(() => {
-      setCoins(prev => {
-        const newCoins = prev.filter(el => el !== coin);
-        setLocalStorage(localStorageNames.coins, newCoins);
-        return newCoins;
-      });
+    setCoins(prev => {
+      const newCoins = prev.filter(el => el !== coin);
+      setLocalStorage(localStorageNames.coins, newCoins);
+      return newCoins;
     });
   }, []);
 
-  const handleAddCoin = useCallback((coin: string) => {
+  const handleAddCoin = useCallback(async (coin: string) => {
+    const { data } = await axios.get(getBaseUrl(coin));
+    if (data?.Response === "Error") {
+      if (messageRef?.current) {
+        messageRef.current.showMessage({ message: `Couldn't find any coin with a name ${coin.toUpperCase()} in the list`, status: 'error' });
+      }
+      return;
+    }
     setCoins(prev => {
-      const newCoins = [...prev, coin];
+      const newCoins = Array.from(new Set([...prev, coin]));
       setLocalStorage(localStorageNames.coins, newCoins);
       return newCoins;
     })
@@ -73,7 +79,6 @@ function App() {
                 <CryptoCard
                   key={coin}
                   coin={coin}
-                  showMessage={messageRef.current?.showMessage}
                   ref={(el) => el && (childRefs.current[coin] = (el as { getPrice: () => void }))}
                 />
               ))

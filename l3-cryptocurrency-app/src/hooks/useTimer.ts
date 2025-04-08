@@ -7,15 +7,15 @@ const useTimer = (callback: () => void) => {
     const intervalId = setInterval(() => {
       callback();
     }, 10000);
-    callback();
     timerRef.current = intervalId;
   }, [callback]);
 
   const resetTimer = useCallback(() => {
     clearInterval(timerRef.current);
     timerRef.current = -1;
+    callback();
     setTimer();
-  }, [setTimer]);
+  }, [setTimer, callback]);
 
   useEffect(() => {
     setTimer();
